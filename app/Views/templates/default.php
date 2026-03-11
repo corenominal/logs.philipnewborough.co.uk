@@ -45,7 +45,7 @@
             <div class="container-fluid px-0">
                 <a class="navbar-brand d-flex align-items-center gap-2 ms-3" href="<?= site_url() ?>">
                     <img src="/icon.svg" alt="Logo" width="45" height="45" class="d-inline-block align-text-top rounded-circle my-1">
-                    Philip Newborough
+                    Event Logger
                 </a>
 
                 <div>
