@@ -37,23 +37,40 @@ function logit($msg, $level = 0)
     $apiKey = $config->masterKey;
 
     // Use CodeIgniter's HTTP client to send the log message
-    $apiurl = config('Urls')->logs . 'api/message';
-    $client = service('curlrequest');
-    $response = $client->post($apiurl, [
-        'headers' => [
-            'ApiKey' => $apiKey,
-            'Content-Type' => 'application/json',
-        ],
-        'body' => json_encode([
-            'domain' => $currentDomain,
-            'message' => $msg,
-            'level' => $level,
-        ]),
+    $apiurl = config('Urls')->logs . 'api/log';
+    $payload = json_encode([
+        'domain' => $currentDomain,
+        'message' => $msg,
+        'level'   => $level,
     ]);
+
+    $ch = curl_init($apiurl);
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER     => [
+            'ApiKey: ' . $apiKey,
+            'Content-Type: application/json',
+        ],
+        CURLOPT_POSTFIELDS     => $payload,
+        CURLOPT_TIMEOUT        => 10,
+    ]);
+
+    $responseBody = curl_exec($ch);
+    $statusCode   = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError    = curl_error($ch);
+
+    curl_close($ch);
+
+    $response = [
+        'status_code' => $statusCode,
+        'body'        => $responseBody,
+        'error'       => $curlError,
+    ];
+
     // Check for errors in the response
-    if ($response->getStatusCode() !== 200) {
-        // Handle error (e.g., log to a file, send an email, etc.)
-        error_log('Failed to log message: ' . $response->getBody());
+    if ($responseBody === false || $statusCode !== 200) {
+        error_log('Failed to log message: ' . ($curlError ?: $responseBody));
     }
     // Optionally, you can return the response for further processing
     return $response;
