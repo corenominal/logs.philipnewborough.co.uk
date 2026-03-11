@@ -15,6 +15,7 @@ $routes->get('/admin/stats', 'Admin\Home::stats');
 
 // API routes
 $routes->match(['get', 'options'], '/api/test/ping', 'Api\Test::ping');
+$routes->match(['post', 'options'], '/api/log', 'Api\Log::index');
 
 // Command line routes
 $routes->cli('cli/test/index/(:segment)', 'CLI\Test::index/$1');
