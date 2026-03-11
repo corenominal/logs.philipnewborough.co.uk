@@ -162,9 +162,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
     syncStatCards(activeLevel);
 
+    const deleteModal = document.getElementById("modal-delete-confirm");
+    deleteModal.addEventListener("hide.bs.modal", function() {
+        document.activeElement?.blur();
+    });
+
     btnDelete.addEventListener("click", function() {
         document.getElementById("delete-count").textContent = selectedIds.size;
-        new bootstrap.Modal(document.getElementById("modal-delete-confirm")).show();
+        new bootstrap.Modal(deleteModal).show();
     });
 
     document.getElementById("btn-delete-confirm").addEventListener("click", function() {
@@ -179,7 +184,7 @@ document.addEventListener("DOMContentLoaded", function() {
             return res.json();
         })
         .then(() => {
-            bootstrap.Modal.getInstance(document.getElementById("modal-delete-confirm")).hide();
+            bootstrap.Modal.getInstance(deleteModal).hide();
             selectedIds.clear();
             updateDeleteButton();
             table.ajax.reload();
@@ -187,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .catch(err => {
             console.error(err);
-            bootstrap.Modal.getInstance(document.getElementById("modal-delete-confirm")).hide();
+            bootstrap.Modal.getInstance(deleteModal).hide();
         });
     });
 
