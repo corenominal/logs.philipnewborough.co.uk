@@ -6,167 +6,193 @@ document.addEventListener("DOMContentLoaded", function() {
             link.classList.add("active");
         }
     });
-});
 
-document.addEventListener("DOMContentLoaded", function() {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const params = new URLSearchParams(window.location.search);
+    const initialSearch = params.get("search") ?? "";
+    let activeLevel = params.get("level") ?? "";
 
-    const exampleTable = new DataTable('#example-table', {
+    const selectedIds = new Set();
+    const btnDelete = document.getElementById("btn-delete");
+    const levelLabels = { "": "All Levels", "0": "Info", "1": "Warning", "2": "Error", "3": "Critical", "4": "Debug" };
 
-        // ── Layout & UI ────────────────────────────────────────────────────────
-        autoWidth:      true,           // Auto-calculate column widths
-        info:           true,           // Show "Showing X to Y of Z entries"
-        lengthChange:   true,           // Allow user to change page length
-        ordering:       true,           // Enable column sorting
-        paging:         true,           // Enable pagination
-        searching:      true,           // Enable global search box
-        orderMulti:     true,           // Allow multi-column sort (shift+click)
-        orderClasses:   true,           // Add sorting CSS classes to columns
-        pagingType:     'simple_numbers', // 'simple' | 'simple_numbers' | 'full' | 'full_numbers' | 'first_last_numbers'
-        pageLength:     10,             // Rows per page
-        lengthMenu:     [10, 25, 50, 100], // Page length options
+    function updateDeleteButton() {
+        btnDelete.disabled = selectedIds.size === 0;
+        btnDelete.querySelector(".selected-count").textContent =
+            selectedIds.size > 0 ? " (" + selectedIds.size + ")" : "";
+    }
 
-        // ── Default sort ───────────────────────────────────────────────────────
-        order: [[0, 'asc']],            // [[columnIndex, 'asc'|'desc'], ...]
+    function syncLevelUI(level) {
+        document.getElementById("level-filter-label").textContent = levelLabels[level] ?? "All Levels";
+        document.querySelectorAll("[data-level]").forEach(el => {
+            el.classList.toggle("active", el.dataset.level === level);
+        });
+    }
 
-        // ── Performance ────────────────────────────────────────────────────────
-        deferRender:    false,          // Defer rendering off-screen rows (useful for large datasets)
-        processing:     false,          // Show a processing indicator (useful with serverSide)
-        serverSide:     false,          // Enable server-side processing (requires ajax option)
-        stateSave:      false,          // Persist state (paging, sorting, search) in sessionStorage
+    function updateSelectAllCheckbox() {
+        const checkboxes = document.querySelectorAll("#logs-table tbody .row-checkbox");
+        const selectAll = document.getElementById("checkbox-select-all");
+        if (!selectAll) return;
+        const checkedCount = [...checkboxes].filter(c => c.checked).length;
+        selectAll.checked = checkboxes.length > 0 && checkedCount === checkboxes.length;
+        selectAll.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+    }
 
-        // ── Data source ────────────────────────────────────────────────────────
-        // ajax: '/api/example-table',  // URL or config object for server-side / ajax data loading
-        // data: [],                    // Inline JS data array (alternative to HTML or ajax)
+    syncLevelUI(activeLevel);
 
-        // ── Scroll ─────────────────────────────────────────────────────────────
-        scrollX:        false,          // Horizontal scrolling
-        scrollY:        '',             // Vertical scroll height, e.g. '400px'
-        scrollCollapse: false,          // Shrink table when fewer rows than scrollY height
-
-        // ── Column definitions ─────────────────────────────────────────────────
-        columns: [
-            {
-                // Column 0 — #
-                name:        'id',
-                title:       '#',
-                type:        'num',         // 'string' | 'num' | 'num-fmt' | 'html' | 'html-num' | 'date'
-                orderable:   true,
-                searchable:  false,         // No value in searching the row number
-                visible:     true,
-                width:       '3rem',
-                className:   'text-end',
-            },
-            {
-                // Column 1 — First Name
-                name:        'first_name',
-                title:       'First Name',
-                type:        'string',
-                orderable:   true,
-                searchable:  true,
-                visible:     true,
-                width:       '',            // Leave empty to let autoWidth decide
-                className:   '',
-            },
-            {
-                // Column 2 — Last Name
-                name:        'last_name',
-                title:       'Last Name',
-                type:        'string',
-                orderable:   true,
-                searchable:  true,
-                visible:     true,
-                width:       '',
-                className:   '',
-            },
-            {
-                // Column 3 — Email
-                name:        'email',
-                title:       'Email',
-                type:        'string',
-                orderable:   true,
-                searchable:  true,
-                visible:     true,
-                width:       '',
-                className:   '',
-            },
-            {
-                // Column 4 — Role
-                name:        'role',
-                title:       'Role',
-                type:        'string',
-                orderable:   true,
-                searchable:  true,
-                visible:     true,
-                width:       '',
-                className:   '',
-            },
-            {
-                // Column 5 — Status (contains HTML, so we use a custom render function to ensure sorting and searching work on the text content, not the HTML)
-                name:        'status',
-                title:       'Status',
-                type:        'string',
-                orderable:   true,
-                searchable:  true,
-                visible:     true,
-                width:       '6rem',
-                className:   'text-center',
-                render: function(data, type, row) {
-                    if (type === 'sort' || type === 'filter') {
-                        const tmp = document.createElement('div');
-                        tmp.innerHTML = data;
-                        return tmp.textContent || tmp.innerText || '';
-                    }
-                    return data;
-                },
-            },
-            {
-                // Column 6 — Joined (ISO date string sorts correctly as a string)
-                name:        'joined',
-                title:       'Joined',
-                type:        'date',
-                orderable:   true,
-                searchable:  false,
-                visible:     true,
-                width:       '7rem',
-                className:   '',
-            },
-        ],
-
-        // ── Language / localisation ────────────────────────────────────────────
-        language: {
-            emptyTable:     'No data available in table',
-            info:           'Showing _START_ to _END_ of _TOTAL_ entries',
-            infoEmpty:      'Showing 0 to 0 of 0 entries',
-            infoFiltered:   '(filtered from _MAX_ total entries)',
-            lengthMenu:     'Show _MENU_ entries',
-            loadingRecords: 'Loading...',
-            processing:     'Processing...',
-            search:         'Search:',
-            zeroRecords:    'No matching records found',
-            paginate: {
-                first:    'First',
-                last:     'Last',
-                next:     'Next',
-                previous: 'Previous',
-            },
+    let table = $("#logs-table").DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "/admin/datatable?timezone=" + encodeURIComponent(timezone),
+            type: "GET",
+            data: function(d) {
+                if (activeLevel !== "") {
+                    d.level = activeLevel;
+                }
+            }
         },
-
-        // ── Callbacks ──────────────────────────────────────────────────────────
-        // initComplete: function(settings, json) {},   // Fires once table is fully initialised
-        // drawCallback: function(settings) {},         // Fires on every draw (page change, sort, search)
-        // rowCallback:  function(row, data, index) {}, // Fires for each row on every draw
-        // createdRow:   function(row, data, index) {}, // Fires once per row when the TR element is created
-        // headerCallback: function(thead, data, start, end, display) {},
-
+        columns: [
+            { data: null, orderable: false, searchable: false, className: "text-center", defaultContent: '<input type="checkbox" class="form-check-input row-checkbox">' },
+            { data: "level" },
+            { data: "message" },
+            { data: "domain" },
+            { data: "created_at" }
+        ],
+        order: [[4, "desc"]],
+        pageLength: 25,
+        language: {},
+        search: { search: initialSearch },
+        drawCallback: function() {
+            const api = this.api();
+            api.rows().every(function() {
+                const id = this.node().id;
+                const checkbox = this.node().querySelector(".row-checkbox");
+                const isSelected = selectedIds.has(id);
+                if (checkbox) checkbox.checked = isSelected;
+                $(this.node()).toggleClass("table-active", isSelected);
+            });
+            updateSelectAllCheckbox();
+        }
     });
 
-    // ── Refresh button ─────────────────────────────────────────────────────────
-    document.getElementById('btn-datatable-refresh').addEventListener('click', function() {
-        // exampleTable.ajax.reload(null, false); // null keeps current page; false = don't reset paging
-        // For non-ajax tables use exampleTable.draw() to simply redraw:
-        exampleTable.draw();
-        console.log('Table refreshed');
+    $("#logs-table").on("search.dt", function() {
+        const searchVal = table.search();
+        const url = new URL(window.location);
+        if (searchVal) {
+            url.searchParams.set("search", searchVal);
+        } else {
+            url.searchParams.delete("search");
+        }
+        window.history.replaceState(null, "", url);
     });
 
+    $("#logs-table tbody").on("click", "tr", function() {
+        const id = this.id;
+        if (!id) return;
+        const checkbox = this.querySelector(".row-checkbox");
+        if (selectedIds.has(id)) {
+            selectedIds.delete(id);
+            if (checkbox) checkbox.checked = false;
+            $(this).removeClass("table-active");
+        } else {
+            selectedIds.add(id);
+            if (checkbox) checkbox.checked = true;
+            $(this).addClass("table-active");
+        }
+        updateDeleteButton();
+        updateSelectAllCheckbox();
+    });
+
+    document.getElementById("checkbox-select-all").addEventListener("change", function() {
+        const checked = this.checked;
+        table.rows({ page: "current" }).every(function() {
+            const id = this.node().id;
+            const checkbox = this.node().querySelector(".row-checkbox");
+            if (checked) {
+                selectedIds.add(id);
+                if (checkbox) checkbox.checked = true;
+                $(this.node()).addClass("table-active");
+            } else {
+                selectedIds.delete(id);
+                if (checkbox) checkbox.checked = false;
+                $(this.node()).removeClass("table-active");
+            }
+        });
+        updateDeleteButton();
+    });
+
+    document.querySelectorAll("[data-level]").forEach(function(el) {
+        el.addEventListener("click", function(e) {
+            e.preventDefault();
+            activeLevel = this.dataset.level;
+            syncLevelUI(activeLevel);
+            syncStatCards(activeLevel);
+            const url = new URL(window.location);
+            if (activeLevel !== "") {
+                url.searchParams.set("level", activeLevel);
+            } else {
+                url.searchParams.delete("level");
+            }
+            window.history.replaceState(null, "", url);
+            table.ajax.reload();
+        });
+    });
+
+    function syncStatCards(level) {
+        document.querySelectorAll(".stat-filter-link").forEach(el => {
+            el.querySelector(".card").classList.toggle("opacity-50", el.dataset.level !== level);
+        });
+    }
+
+    function refreshStats() {
+        fetch("/admin/stats")
+            .then(res => res.json())
+            .then(data => {
+                const map = { "": "total", "0": "info", "1": "warning", "2": "error", "3": "critical", "4": "debug" };
+                document.querySelectorAll(".stat-filter-link").forEach(el => {
+                    const key = map[el.dataset.level];
+                    if (key !== undefined) {
+                        el.querySelector(".fs-3").textContent = data[key] ?? 0;
+                    }
+                });
+            })
+            .catch(err => console.error("Stats refresh failed:", err));
+    }
+
+    syncStatCards(activeLevel);
+
+    btnDelete.addEventListener("click", function() {
+        document.getElementById("delete-count").textContent = selectedIds.size;
+        new bootstrap.Modal(document.getElementById("modal-delete-confirm")).show();
+    });
+
+    document.getElementById("btn-delete-confirm").addEventListener("click", function() {
+        const ids = [...selectedIds];
+        fetch("/admin/logs/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Delete failed");
+            return res.json();
+        })
+        .then(() => {
+            bootstrap.Modal.getInstance(document.getElementById("modal-delete-confirm")).hide();
+            selectedIds.clear();
+            updateDeleteButton();
+            table.ajax.reload();
+            refreshStats();
+        })
+        .catch(err => {
+            console.error(err);
+            bootstrap.Modal.getInstance(document.getElementById("modal-delete-confirm")).hide();
+        });
+    });
+
+    document.getElementById("btn-datatable-refresh").addEventListener("click", function() {
+        table.ajax.reload();
+        refreshStats();
+    });
 });
-

@@ -107,14 +107,6 @@
                 <div class="offcanvas-body p-0 d-flex flex-column">
                     <nav class="flex-grow-1 py-3" aria-label="Sidebar navigation">
 
-                        <ul class="nav flex-column mb-3">
-                            <li class="nav-item">
-                                <a class="nav-link d-flex align-items-center gap-2 text-white-50 px-3 py-2 active" href="/">
-                                    <i class="bi bi-speedometer2"></i> Dashboard
-                                </a>
-                            </li>
-                        </ul>
-
                         <?php // is_admin session is set and true
                         if( session()->get('is_admin') ):
                         ?>
@@ -122,7 +114,7 @@
                         <ul class="nav flex-column mb-3">
                             <li class="nav-item">
                                 <a class="nav-link d-flex align-items-center gap-2 text-white-50 px-3 py-2" href="/admin">
-                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                    <i class="bi bi-clipboard-data"></i> Event Viewer
                                 </a>
                             </li>
                         </ul>

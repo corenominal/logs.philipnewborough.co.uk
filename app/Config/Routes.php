@@ -9,6 +9,9 @@ $routes->get('/', 'Home::index');
 
 // Admin routes
 $routes->get('/admin', 'Admin\Home::index');
+$routes->get('/admin/datatable', 'Admin\Home::datatable');
+$routes->post('/admin/logs/delete', 'Admin\Home::deleteLogs');
+$routes->get('/admin/stats', 'Admin\Home::stats');
 
 // API routes
 $routes->match(['get', 'options'], '/api/test/ping', 'Api\Test::ping');
