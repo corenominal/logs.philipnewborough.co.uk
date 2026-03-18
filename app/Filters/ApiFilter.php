@@ -53,6 +53,12 @@ class ApiFilter implements FilterInterface
         // Assign the API key
         $apikey = $request->header('apikey')->getValue();
 
+        // Test for empty API key
+        if (empty($apikey)) {
+            header('HTTP/1.1 401 Unauthorized', true, 401);
+            exit(json_encode(['error' => 'Empty API key provided.']));
+        }
+
         // Set success flag
         $success = false;
         
