@@ -21,6 +21,9 @@ $routes->match(['post', 'options'], '/api/log', 'Api\Log::index');
 $routes->cli('cli/test/index/(:segment)', 'CLI\Test::index/$1');
 $routes->cli('cli/test/count', 'CLI\Test::count');
 
+// Metrics route
+$routes->post('/metrics/receive', 'Metrics::receive');
+
 // Logout route
 $routes->get('/logout', 'Auth::logout');
 
